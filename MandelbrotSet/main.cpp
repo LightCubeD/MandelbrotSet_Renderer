@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
 				}
 			}
 			double p, pbs;
-			pbs = 100.0 * y / (HEIGHT * (length / framesPS));
+			pbs = 100.0 * (y + (i * HEIGHT)) / (HEIGHT * (length / framesPS));
 			p = 100.0 * y / HEIGHT;
 			std::cout << "ABS: " << std::to_string(pbs) << "%     " << std::to_string(p) << "%  I: " << i << std::endl;
 		}
