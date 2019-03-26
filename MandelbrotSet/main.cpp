@@ -6,7 +6,7 @@
 #include <mpirxx.h>
 
 #define PRECISION 1024
-#define ITERATIONS 100
+#define ITERATIONS 500
 #define WIDTH 1920
 #define HEIGHT 1080	
 
@@ -98,6 +98,10 @@ void cAbs(mpf_t& o, complex a) {
 	mpf_clear(sub2);
 }
 
+double cAbs(complex a) {
+	return sqrt(((mpf_get_d(a.re))*(mpf_get_d(a.re)))+((mpf_get_d(a.im))*(mpf_get_d(a.im))));
+}
+
 bool cSmallerEquals2(complex a) {
 	mpf_t abs;
 	mpf_init(abs);
@@ -115,11 +119,12 @@ Image image;
 complex z;
 
 void makeImg(std::vector<unsigned char> data, std::string title) {
-	image.read(WIDTH, HEIGHT, "RGB", CharPixel, &data[0]);
+	image.read(WIDTH, HEIGHT, "HSV", CharPixel, &data[0]);
 	image.write("Images/" + title + ".png");
 }
 
-unsigned int getIterationsMandelBrot(complex c) {
+unsigned int * getIterationsMandelBrot(complex c) {
+	unsigned int ret[2];
 	unsigned int n = 0;
 	z.set("0", "0");
 
@@ -130,7 +135,9 @@ unsigned int getIterationsMandelBrot(complex c) {
 		cAdd(z, z, c);
 		n++;
 	}
-	return n;
+	ret[0] = n;
+	ret[1] = n + 1 - log(log2(cAbs(z)));
+	return ret;
 }
 
 int main(int argc, char** argv) {
@@ -170,13 +177,14 @@ int main(int argc, char** argv) {
 				mpf_add(pointY, pointY, offsetYAfter);
 				c.set(pointX, pointY);
 				unsigned int i = (x + (y * WIDTH)) * 3;
-				if (getIterationsMandelBrot(c) == ITERATIONS) {
+				unsigned int* it = getIterationsMandelBrot(c);
+				if (it[0] == ITERATIONS) {
 					data[i] = 0;
 					data[i + 1] = 0;
 					data[i + 2] = 0;
 				}
 				else {
-					data[i] = 255;
+					data[i] = it[1];
 					data[i + 1] = 255;
 					data[i + 2] = 255;
 				}
