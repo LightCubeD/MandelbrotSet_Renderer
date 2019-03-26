@@ -4,11 +4,12 @@
 #include <iomanip>
 #include <Magick++.h>
 #include <mpirxx.h>
+#include <fstream>
 
 #define PRECISION 1024
 #define ITERATIONS 500
-#define WIDTH 1920
-#define HEIGHT 1080	
+#define WIDTH 1270
+#define HEIGHT 720	
 
 
 using namespace Magick;
@@ -136,8 +137,18 @@ unsigned int * getIterationsMandelBrot(complex c) {
 		n++;
 	}
 	ret[0] = n;
-	ret[1] = n + 1 - log(log2(cAbs(z)));
+	ret[1] = 255 * (n + 1 - log(log2(cAbs(z))));
 	return ret;
+}
+
+std::string readFile(std::string path) {
+	std::string res;
+	std::ifstream stream(path);
+	while (stream) {
+		std::string line;
+		std::getline(stream, line);
+		res += line;
+	}
 }
 
 int main(int argc, char** argv) {
@@ -152,19 +163,44 @@ int main(int argc, char** argv) {
 	double length = 1;
 	std::vector<unsigned char> data(WIDTH * HEIGHT * 3);
 	complex c;
-	mpf_t pointX, pointY, scale, offsetXBefore, offsetYBefore, offsetXAfter, offsetYAfter;
+	mpf_t pointX, pointY, scale, offsetXBefore, offsetYBefore, offsetXAfter, offsetYAfter, widthT, scaleV, toffT, scaleFPS;
 	mpf_init(pointX);
 	mpf_init(pointY);
 	mpf_init(scale);
+	mpf_init(scaleV);
+	mpf_init(scaleFPS);
+	mpf_init_set_ui(toffT, toff);
+	mpf_init_set_ui(widthT, WIDTH);
 	mpf_init_set_d(offsetXBefore, WIDTH / 2);
 	mpf_init_set_d(offsetYBefore, HEIGHT / 2);
-	mpf_init_set_d(offsetXAfter, -0.25);
-	mpf_init_set_d(offsetYAfter, 0);
-	double scaleV = 4;
-	scaleV -= toff * 3.75 * framesPS;
+	std::string xOff = readFile("xOff.txt");
+	std::string yOff = readFile("yOff.txt");
+	mpf_init_set_str(offsetXAfter, xOff.c_str(), 10);
+	mpf_init_set_str(offsetYAfter, yOff.c_str(), 10);
+	std::string startScale = readFile("startScale.txt");
+	std::string scaleFPSS = readFile("ScaleFPS.txt");
+	mpf_set_str(scaleV, startScale.c_str(), 10);
+	mpf_set_str(scaleFPS, scaleFPSS.c_str(), 10);
+	mpf_t sub1;
+	mpf_init_set_ui(sub1, 1);
+	mpf_div_ui(sub1, sub1, 60);
+	mpf_mul(sub1, sub1, toffT);
+	mpf_mul(sub1, sub1, scaleFPS);
+	mpf_sub(scaleV, scaleV, sub1);
+	mpf_clear(sub1);
+	//scaleV -= toff * 3.75 * framesPS;
 	for (unsigned int i = toff; i < length / framesPS; i+=threads) {
-		mpf_set_d(scale, WIDTH / scaleV);
-		scaleV -= threads * 3.75 * framesPS;
+		//mpf_set_d(scale, WIDTH / scaleV);
+		mpf_div(scale, widthT, scaleV);
+		//scaleV -= threads * 3.75 * framesPS;
+		mpf_t sub1;
+		mpf_init_set_ui(sub1, 1);
+		mpf_div_ui(sub1, sub1, 60);
+		mpf_mul_ui(sub1, sub1, threads);
+		mpf_mul(sub1, sub1, scaleFPS);
+		mpf_sub(scaleV, scaleV, sub1);
+		mpf_clear(sub1);
+
 		for (int y = 0; y < HEIGHT; y++) {
 			for (int x = 0; x < WIDTH; x++) {
 				mpf_set_ui(pointX, x);
@@ -200,6 +236,10 @@ int main(int argc, char** argv) {
 	mpf_clear(pointX);
 	mpf_clear(pointY);
 	mpf_clear(scale);
+	mpf_clear(widthT);
+	mpf_clear(scaleV);
+	mpf_clear(toffT);
+	mpf_clear(scaleFPS);
 	mpf_clear(offsetXBefore);
 	mpf_clear(offsetYBefore);
 	mpf_clear(offsetXAfter);
