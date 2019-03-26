@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 	}
 	InitializeMagick(*argv);
 	double framesPS = 1.0 / 30.0;
-	double length = 1;
+	unsigned int length = std::stoi(readFile("length.txt"));
 	std::vector<unsigned char> data(WIDTH * HEIGHT * 3);
 	complex c;
 	mpf_t pointX, pointY, scale, offsetXBefore, offsetYBefore, offsetXAfter, offsetYAfter, widthT, scaleV, toffT, scaleFPS;
