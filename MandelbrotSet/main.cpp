@@ -149,6 +149,7 @@ std::string readFile(std::string path) {
 		std::getline(stream, line);
 		res += line;
 	}
+	return res;
 }
 
 int main(int argc, char** argv) {
