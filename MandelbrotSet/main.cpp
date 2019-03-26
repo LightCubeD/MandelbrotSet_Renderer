@@ -189,6 +189,7 @@ int main(int argc, char** argv) {
 	mpf_mul(sub1, sub1, scaleFPS);
 	mpf_sub(scaleV, scaleV, sub1);
 	mpf_clear(sub1);
+	unsigned int frameCounter = 0;
 	//scaleV -= toff * 3.75 * framesPS;
 	for (unsigned int i = toff; i < length / framesPS; i+=threads) {
 		//mpf_set_d(scale, WIDTH / scaleV);
@@ -227,10 +228,11 @@ int main(int argc, char** argv) {
 				}
 			}
 			double p, pbs;
-			pbs = 100.0 * (y + (i * HEIGHT)) / (HEIGHT * (length / framesPS));
+			pbs = 100.0 * (y + (frameCounter * HEIGHT)) / (HEIGHT * (length / framesPS));
 			p = 100.0 * y / HEIGHT;
 			std::cout << "ABS: " << std::to_string(pbs) << "%     " << std::to_string(p) << "%  I: " << i << std::endl;
 		}
+		frameCounter++;
 		makeImg(data, std::to_string(i));
 	}
 
